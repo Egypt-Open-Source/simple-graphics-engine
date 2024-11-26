@@ -4,16 +4,14 @@
 #include "Shader.h"
 #include "Camera.h"
 #include <vector>
+#include <string>
 
 class Renderer {
 public:
-    Renderer();
-    ~Renderer();
-    void render(const std::vector<float>& vertices, Shader& shader, Camera& camera);
-
-private:
-    GLuint VAO, VBO;
-    void setupMesh(const std::vector<float>& vertices);
+    void render(const std::vector<float>& vertices, Shader& shader, Camera& camera, glm::vec3 center, float scale);
+    void renderSkybox(Shader& shader, unsigned int cubemapTexture, Camera& camera);
+    unsigned int loadCubemap(const std::vector<std::string>& faces);
+    void clear();
 };
 
 #endif

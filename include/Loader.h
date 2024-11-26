@@ -1,12 +1,13 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include <vector>
 #include <string>
+#include <vector>
+#include "../vendors/glm/glm/glm.hpp"
 
 class Loader {
 public:
-    static bool loadOBJ(const std::string& filepath, std::vector<float>& vertices, std::vector<unsigned int>& indices);
+    bool loadOBJ(const std::string& filepath, std::vector<float>& vertices, std::vector<unsigned int>& indices, glm::vec3& center, float& scale);
 };
 
 #endif

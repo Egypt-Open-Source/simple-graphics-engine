@@ -1,60 +1,61 @@
 #include "include/Camera.h"
 #include "include/Loader.h"
 #include "include/Renderer.h"
-#include "include/Shader.h"
 #include "include/Window.h"
+#include "include/Shader.h"
 #include <iostream>
+#include <string>
 #include <vector>
-
-using namespace std;
 
 int main() {
     Window window(800, 600, "3D OBJ Viewer");
 
-    Shader shader("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
-    Camera camera;
+    Loader loader;
     Renderer renderer;
+    Camera camera;
 
-    glfwSetWindowUserPointer(window.getGLFWwindow(), &camera);
-    glfwSetCursorPosCallback(window.getGLFWwindow(), Window::mouse_callback);
-    glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glm::vec3 center;
+    float scale;
 
-    vector<float> vertices;
-    vector<unsigned int> indices;
-
-    if (!Loader::loadOBJ("teapot.obj", vertices, indices)) {
-        cerr << "Failed to load OBJ file" << "\n";
+    // Load the OBJ model
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+    if (!loader.loadOBJ("teapot.obj", vertices, indices, center, scale)) {
+        std::cerr << "Failed to load OBJ file!" << std::endl;
         return -1;
     }
 
+    // Skybox setup
+    std::vector<std::string> faces = {"textures/right.jpg", "textures/left.jpg",
+                                      "textures/top.jpg",   "textures/bottom.jpg",
+                                      "textures/front.jpg", "textures/back.jpg"};
+    unsigned int cubemapTexture = renderer.loadCubemap(faces);
+    Shader skyboxShader("shaders/skybox_vertex.glsl", "shaders/skybox_fragment.glsl");
+
+    // Define shader for the 3D model
+    Shader modelShader("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
+
+    float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
+    // Main rendering loop
     while (!window.shouldClose()) {
-        float currentFrame = glfwGetTime();
-        float deltaTime = currentFrame - lastFrame;
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // Clear the screen with gray color
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Process input for camera movement
+        window.processInput(camera, deltaTime); 
 
-        // Process input
-        GLFWwindow* glfwWindow = window.getGLFWwindow();
-        if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS)
-            camera.processKeyboard(GLFW_KEY_W, deltaTime);
-        if (glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS)
-            camera.processKeyboard(GLFW_KEY_S, deltaTime);
-        if (glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS)
-            camera.processKeyboard(GLFW_KEY_A, deltaTime);
-        if (glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS)
-            camera.processKeyboard(GLFW_KEY_D, deltaTime);
-
-        // Render the scene
-        renderer.render(vertices, shader, camera);
-
-        // Swap buffers
-        window.swapBuffers();
         window.pollEvents();
+
+        // Render the skybox
+        renderer.renderSkybox(skyboxShader, cubemapTexture, camera);
+
+        // Render the model
+        renderer.render(vertices, modelShader, camera, center, scale);
+
+        window.swapBuffers();
     }
 
     return 0;

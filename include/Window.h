@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include "../vendors/glfw/include/GLFW/glfw3.h"
+#include "../include/Camera.h"
 
 class Window {
 public:
@@ -15,6 +16,7 @@ public:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+     void processInput(Camera& camera, float deltaTime);
 
 private:
     GLFWwindow* window;
